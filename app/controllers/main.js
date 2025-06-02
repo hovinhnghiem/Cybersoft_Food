@@ -1,10 +1,10 @@
 import Food from "./../models/food.js";
 import FoodList from "./../models/food-list.js";
-
+import Validation from "./../controllers/validation.js";
 // tạo đối tượng foodList từ lớp đối tượng FoodList
 const foodList = new FoodList();
-
-const getEle = (id) => {
+const validation = new Validation();
+export const getEle = (id) => {
   return document.getElementById(id);
 };
 
@@ -25,22 +25,17 @@ const getValue = () => {
   /**
    * Validation
    */
-  if (id === "") {
-    // show thông báo lỗi ra ngoài
-    // tạo câu thông báo => gán ra ngoài thẻ inform
-    getEle("invalidID").innerHTML = "(*) Vui long nhap id";
-
-    // dom tới #id-inform => display: block
-    getEle("invalidID").style.display = "block";
-    isValid = false;
-  } else {
-    getEle("invalidID").innerHTML = "";
-    getEle("invalidID").style.display = "none";
-    isValid = true;
-  }
-
+  isValid &= validation.checkEmpty(id, "invalidID", "(*) Vui Long Nhap ID Mon An") && validation.checkIDExist(id, "invalidID", "(*) Vui Long Nhap ID Hop Le", foodList.arr);  //&= So sanh xong rồi mới gán giá trị, thoả 2 điều kiện mới đúng
+  isValid &= validation.checkEmpty(name, "invalidTen", "(*) Vui Long Nhap Ten Mon An") && validation.checkString(name, "invalidTen", "(*) Vui Long Nhap Ten Mon An Hop Le") && validation.checkCharacterLength(name, "invalidTen", "(*) Ten mon an tu 2-8 ky tu");
   // Nếu isValid là false => stop
   if (!isValid) return;
+
+//Kiem tra loai mon an
+isValid &= validation.checkSelectOption(
+  "loai",
+  "invalidLoai",
+  "(*) Vui long chon loai mon an"
+)
 
   // Tạo đối tượng food từ lớp đối tượng Food
   const food = new Food(
@@ -87,12 +82,10 @@ const renderFoodList = (data) => {
         <td>${food.pricePromotion}</td>
         <td>${food.status == "0" ? "Hết" : "Còn"}</td>
         <td>
-          <button class="btn btn-info" data-toggle="modal" data-target="#exampleModal" onclick="onEditFood('${
-            food.id
-          }')">Edit</button>
-          <button class="btn btn-danger" onclick="onDeleteFood('${
-            food.id
-          }')">Delete</button>
+          <button class="btn btn-info" data-toggle="modal" data-target="#exampleModal" onclick="onEditFood('${food.id
+      }')">Edit</button>
+          <button class="btn btn-danger" onclick="onDeleteFood('${food.id
+      }')">Delete</button>
         </td>
       </tr>    
     `;
