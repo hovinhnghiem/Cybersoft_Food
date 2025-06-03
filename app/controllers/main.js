@@ -19,6 +19,29 @@ const getValue = () => {
   const image = getEle("hinhMon").value;
   const description = getEle("moTa").value;
 
+  // tạo flag (cờ)
+  let isValid = true;
+
+  /**
+   * Validation
+   */
+  if (id === "") {
+    // show thông báo lỗi ra ngoài
+    // tạo câu thông báo => gán ra ngoài thẻ inform
+    getEle("invalidID").innerHTML = "(*) Vui long nhap id";
+
+    // dom tới #id-inform => display: block
+    getEle("invalidID").style.display = "block";
+    isValid = false;
+  } else {
+    getEle("invalidID").innerHTML = "";
+    getEle("invalidID").style.display = "none";
+    isValid = true;
+  }
+
+  // Nếu isValid là false => stop
+  if (!isValid) return;
+
   // Tạo đối tượng food từ lớp đối tượng Food
   const food = new Food(
     id,
@@ -55,6 +78,7 @@ const renderFoodList = (data) => {
     const food = data[i];
     contentHTML += `
       <tr>
+        <td>${i + 1}</td>
         <td>${food.id}</td>
         <td>${food.name}</td>
         <td>${food.type === "loai1" ? "Chay" : " Mặn"}</td>
@@ -77,6 +101,13 @@ const renderFoodList = (data) => {
 };
 
 /**
+ * clear data form
+ */
+const resetForm = () => {
+  getEle("foodForm").reset();
+};
+
+/**
  * Click thêm món ăn => Hiển thị modal => Cập nhật ẩn
  */
 getEle("btnThem").onclick = function () {
@@ -88,13 +119,38 @@ getEle("btnThem").onclick = function () {
 
   // Hiển thị nút Thêm
   getEle("btnThemMon").style.display = "block";
+
+  // enable foodID
+  getEle("foodID").disabled = false;
+
+  //Clear Form
+  resetForm();
+};
+
+/**
+ * Cập Nhật món ăn
+ */
+getEle("btnCapNhat").onclick = function () {
+  // Gọi phương thức addFood() để thêm món ăn vào danh sách
+  const food = getValue();
+
+  // Cập nhật thông tin món ăn
+  foodList.updateFood(food);
+
+  // close Modal
+  document.getElementsByClassName("close")[0].click();
+
+  // Render lai ds
+  renderFoodList(foodList.arr);
+
+  // Lưu data mới xuống localStorage
+  setLocalStorage(foodList.arr);
 };
 
 /**
  * Hàm xử lý sự kiện sửa món ăn
  */
 const onEditFood = (id) => {
-  console.log(id);
   // Cập nhật tiêu đề của Modal
   getEle("exampleModalLabel").innerHTML = "Sửa món ăn";
 
@@ -103,6 +159,23 @@ const onEditFood = (id) => {
 
   // Hiện nút cập nhật
   getEle("btnCapNhat").style.display = "block";
+
+  // lấy thông tin chi tiết của món ăn muốn sửa
+  const food = foodList.getFoodById(id);
+  if (food) {
+    // Dom tới các thẻ input trên modal => show data của food
+    getEle("foodID").value = food.id;
+    // Dom tới foodID => disabled
+    getEle("foodID").disabled = true;
+
+    getEle("tenMon").value = food.name;
+    getEle("loai").value = food.type;
+    getEle("giaMon").value = food.price;
+    getEle("khuyenMai").value = food.promotion;
+    getEle("tinhTrang").value = food.status;
+    getEle("hinhMon").value = food.image;
+    getEle("moTa").value = food.description;
+  }
 };
 window.onEditFood = onEditFood;
 
@@ -155,6 +228,8 @@ getEle("btnThemMon").onclick = function () {
   // Gọi phương thức addFood() để thêm món ăn vào danh sách
   const food = getValue();
 
+  if (!food) return;
+
   foodList.addFood(food);
 
   // Gọi hàm renderFoodList() để hiển thị danh sách món ăn
@@ -164,5 +239,30 @@ getEle("btnThemMon").onclick = function () {
   setLocalStorage(foodList.arr);
 
   // close modal
-  document.getElementsByClassName("close")[0].click();
+  // document.getElementsByClassName("close")[0].click();
 };
+
+/**
+ * Filter món ăn
+ */
+// Callback function: Hàm có tham số truyền là 1 hàm khác
+getEle("selLoai").addEventListener("change", () => {
+  const type = getEle("selLoai").value;
+
+  // gọi tới phương thức filterFood(type)
+  const arrFiltered = foodList.filterFood(type);
+
+  // render list
+  renderFoodList(arrFiltered);
+});
+
+/**
+ * Tìm kiếm món ăn
+ */
+getEle("keyword").addEventListener("keyup", () => {
+  const keyword = getEle("keyword").value;
+
+  const findFoods = foodList.searchFood(keyword);
+
+  renderFoodList(findFoods);
+});
